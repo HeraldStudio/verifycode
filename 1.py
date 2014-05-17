@@ -7,18 +7,12 @@ import pickle
 import os,urllib,time
 
 def preprocess(filepath):
-	"""
-		Add crop code there
-	"""
 	im = Image.open(filepath)
-	im = im.filter(ImageFilter.MedianFilter())
-	enhancer = ImageEnhance.Contrast(im)
-	im = enhancer.enhance(2)
 	im = im.convert('1')
 	return im
 
 def split(im):
-	box = [(10,5,50,90),(65,5,105,90),(105,5,145,90),(155,5,195,90)]
+	box = [(13,5,53,90),(59,5,99,90),(105,5,145,90),(151,5,191,90)]
 	imbox = []
 	for i in range(0,4):
 		imbox.append(im.crop(box[i]))
@@ -36,8 +30,11 @@ def showim(im):
 def im2matrix(im):
 	t=[]
 	for x in xrange(im.size[0]):
+		tt=0
 		for y in xrange(im.size[1]):
-			t.append(im.getpixel((x,y)))
+			if im.getpixel((x,y)) == 0:
+				tt += 1
+		t.append(tt)
 	return t
 
 def learnimg(filepath):
@@ -46,7 +43,6 @@ def learnimg(filepath):
 	data = []
 	key = []
 	for x in xbox:
-		x.save('learntmp.png')
 		key.append(showim(x) - 0x30)
 		data.append(im2matrix(x))
 	return data,key
@@ -55,7 +51,7 @@ def learn():
 	clf = svm.SVC(gamma=1, C=100.,probability=True,kernel='linear')
 	data=[]
 	key=[]
-	for i in range(1,60):
+	for i in range(1,15):
 		da,ke = learnimg('downloadcode/%d.jpg'%i)
 		for i in range(0,4):
 			data.append(da[i])
@@ -66,15 +62,9 @@ def learn():
 	f.write(s)
 	f.close()
 
-def test(filename):
+def test(filename,clf):
 	im = preprocess(filename)
 	imbox = split(im)
-	iris = datasets.load_iris()
-
-	f = open('learn.pkl','r')
-	s = f.read()
-	f.close()
-	clf = pickle.loads(s)
 
 	result = ''
 	for i in range(0,4):
@@ -118,7 +108,7 @@ t = [
 7362,3096,6837,2358,6758,75,
 2552,526,7833,7579,887,2968,
 3880,4699,4884,8984,975,397,
-3668,3282,3723,3557,7090,7398,
+3668,3282,3723,3557,6090,7398,
 3683,439,9688,3990,3335,8552,
 4059,5900,8932,7775,6599,2759,#180
 ]
@@ -127,10 +117,21 @@ t = [
 #for i in range(1,500):
 #	downloadimg("%d"%i)
 #	time.sleep(1)
-ri = 0
-for i in range(0,100):
-	r = test('test/%d.jpg'%(i+1))
-	if t[i] != r :
-		print t[i],r,i+1
-		ri = ri + 1
-print "Rate:",ri
+
+def identity():
+	#learn()
+
+	f = open('learn.pkl','r')
+	s = f.read()
+	f.close()
+	clf = pickle.loads(s)
+	
+	ri = 0
+	for i in range(0,180):
+		r = test('test/%d.jpg'%(i+1),clf)
+		if t[i] != r :
+			print t[i],r,i+1
+			ri = ri + 1
+	print "Rate:",1-float(ri)/180
+
+identity()
