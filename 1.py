@@ -7,6 +7,9 @@ import pickle
 import os,urllib,time
 
 def preprocess(filepath):
+	"""
+		Add crop code there
+	"""
 	im = Image.open(filepath)
 	im = im.filter(ImageFilter.MedianFilter())
 	enhancer = ImageEnhance.Contrast(im)
@@ -15,9 +18,6 @@ def preprocess(filepath):
 	return im
 
 def split(im):
-	"""
-		Add crop code there
-	"""
 	box = [(10,5,50,90),(65,5,105,90),(105,5,145,90),(155,5,195,90)]
 	imbox = []
 	for i in range(0,4):
